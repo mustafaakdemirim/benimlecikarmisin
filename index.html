@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Benimle çıkar mısın?</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif;background:#ffe6f0;overflow:hidden}
+  .wrap{height:100vh;display:flex;align-items:center;justify-content:center;gap:24px;position:relative}
+  button{padding:16px 22px;font-size:18px;border-radius:10px;border:0;cursor:pointer;transition:transform .25s ease, left .2s ease, top .2s ease, background .2s ease;user-select:none;position:relative}
+  #yesBtn{background:#ff4d88;color:#fff;z-index:10}
+  #noBtn{background:#ddd;color:#111;z-index:10}
+
+  /* overlay */
+  .overlay{position:fixed;inset:0;display:none;flex-direction:column;z-index:9999;overflow:hidden}
+  .overlay.active{display:flex}
+  .bg{position:absolute;inset:0;animation:colorful 6s linear infinite;background-size:400% 400%}
+  @keyframes colorful {
+    0%{background:linear-gradient(135deg,#ff9eb6,#ffd1e6)}
+    25%{background:linear-gradient(135deg,#fffa9e,#ffb6d5)}
+    50%{background:linear-gradient(135deg,#b6ffd8,#ffd6b6)}
+    75%{background:linear-gradient(135deg,#c2b6ff,#ffd6f0)}
+    100%{background:linear-gradient(135deg,#ff9eb6,#ffd1e6)}
+  }
+
+  /* site mesajı çubuğu */
+  .site-header{
+    background:#222;color:#fff;width:100%;padding:10px;text-align:center;
+    font-weight:bold;z-index:100;font-size:18px;
+    position:relative;
+  }
+
+  /* romantik mesaj */
+  .romantic-message{
+    margin-top:20px;
+    text-align:center;
+    font-size:20px;
+    color:#fff;
+    text-shadow:0 0 4px rgba(0,0,0,0.6);
+    z-index:5;
+  }
+
+  /* balon/kalp */
+  .floating {
+    position: absolute;
+    bottom: -50px;
+    font-size: 24px;
+    animation: floatUp 5s linear forwards;
+    z-index:1;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-110vh); opacity: 0; }
+  }
+
+  /* big heart (ortada duracak) */
+  .big-heart{font-size:100px;transform-origin:center;animation:heartbeat 1.4s ease-in-out infinite;z-index:4;pointer-events:none;margin-top:10px}
+  @keyframes heartbeat{
+    0%,100%{transform:scale(1);opacity:.85}
+    50%{transform:scale(1.18);opacity:1}
+  }
+
+  /* ring box */
+  .ring-area{position:relative;z-index:5;display:flex;align-items:center;justify-content:center;gap:20px;flex-direction:column;margin-top:20px}
+  .ring-box{
+    width:140px;height:120px;border-radius:14px;background:#fff0f5;box-shadow:0 8px 30px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:visible;
+    transition:transform .35s cubic-bezier(.2,.9,.2,1);
+  }
+  .ring-box .lid{position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:92px;height:40px;background:#ffe6f3;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);transition:transform .45s cubic-bezier(.2,.9,.2,1)}
+  .ring{font-size:48px;transform:translateY(40px) scale(.6);opacity:0;transition:transform .6s cubic-bezier(.2,.9,.2,1),opacity .3s}
+  .ring-box.open .lid{transform:translateX(-50%) translateY(-30px) rotate(-10deg)}
+  .ring-box.open .ring{transform:translateY(-22px) scale(1);opacity:1}
+
+  @media (max-width:480px){
+    .big-heart{font-size:80px}
+    .ring-box{width:120px;height:100px}
+    button{padding:12px 16px;font-size:16px}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <button id="yesBtn" aria-label="Benimle çıkar mısın?">Benimle çıkar mısın?</button>
+    <button id="noBtn" aria-label="Hayır">Hayır</button>
+  </div>
+
+  <!-- Full screen overlay -->
+  <div class="overlay" id="overlay" role="dialog" aria-hidden="true">
+    <div class="bg"></div>
+    <div class="site-header">Site Mesajı</div>
+    <div class="romantic-message">❤️ Aşkınız daim, kalpleriniz hep bir olsun ❤️</div>
+    <div class="big-heart">💖</div>
+    <div class="ring-area">
+      <div class="ring-box" id="ringBox">
+        <div class="lid"></div>
+        <div class="ring">💍</div>
+      </div>
+      <div style="color:white;text-shadow:0 0 3px black;font-size:14px">Kutuyu tıkla — yüzük çıkacak ✨</div>
+    </div>
+  </div>
+
+<script>
+const yesBtn = document.getElementById('yesBtn');
+const noBtn  = document.getElementById('noBtn');
+const overlay= document.getElementById('overlay');
+const ringBox= document.getElementById('ringBox');
+let noCount = 0;
+
+noBtn.addEventListener('click', () => {
+  noCount++;
+  let scale = 1 + noCount * 0.15;
+  if (scale > 2) scale = 2;
+  yesBtn.style.transform = `scale(${scale})`;
+
+  // butonu ekrandan kaçır
+  const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+  const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+  noBtn.style.position = 'fixed';
+  noBtn.style.left = `${x}px`;
+  noBtn.style.top = `${y}px`;
+
+  // hayır butonunu yok et
+  if(noCount > 1) {
+    noBtn.style.display = 'none';
+  }
+});
+
+yesBtn.addEventListener('click', () => {
+  openOverlay();
+});
+
+function openOverlay(){
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden','false');
+  spawnEmojis();
+}
+
+function spawnEmojis(){
+  for (let i = 0; i < 40; i++) {
+    createFloatingEmoji();
+  }
+  setInterval(() => createFloatingEmoji(), 800);
+}
+
+function createFloatingEmoji() {
+  const emojis = ['🎈', '❤️', '💖', '💘', '💝', '💌', '🌹', '💍'];
+  const emoji = document.createElement('div');
+  emoji.classList.add('floating');
+  emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+  emoji.style.left = Math.random() * window.innerWidth + 'px';
+  emoji.style.fontSize = (Math.random() * 24 + 20) + 'px';
+  emoji.style.animationDuration = (Math.random() * 3 + 3) + 's';
+  overlay.appendChild(emoji);
+  setTimeout(() => emoji.remove(), 5000);
+}
+
+ringBox.addEventListener('click', () => {
+  ringBox.classList.toggle('open');
+});
+</script>
+</body>
+</html>
